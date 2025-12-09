@@ -1,2 +1,2 @@
 # kubernetes-learning
-เก็บข้อมูลพวก installation, .yaml และอื่นๆ
+เก็บข้อมูลพวก installation .yaml และ อื่นๆ
