@@ -124,7 +124,7 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
 ### 4.3 ติดตั้ง Calico CNI (รองรับ Kubernetes 1.33)
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.31.0/manifests/tigera-operator.yaml
+kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.31.0/manifests/crds.yaml
 kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.31.0/manifests/custom-resources.yaml
 ```
 
