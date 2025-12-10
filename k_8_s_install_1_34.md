@@ -1,6 +1,6 @@
-# Kubernetes 1.34 Installation Guide (Using kubeadm)
+# Kubernetes 1.33 Installation Guide (Using kubeadm)
 
-คู่มือนี้เป็นเวอร์ชันอัปเดตล่าสุดสำหรับ **Kubernetes v1.34.x** บน Ubuntu **20.04 / 22.04 LTS** โดยใช้ **kubeadm** และ **containerd** (Runtime มาตรฐานปัจจุบัน)
+คู่มือนี้เป็นเวอร์ชันอัปเดตล่าสุดสำหรับ **Kubernetes v1.33.x** บน Ubuntu **20.04 / 22.04 LTS** โดยใช้ **kubeadm** และ **containerd** (Runtime มาตรฐานปัจจุบัน)
 
 ขั้นตอนทั้งหมดประกอบด้วย:
 1. การเตรียมเครื่อง (Pre-requisites)
@@ -53,7 +53,7 @@ sudo sysctl --system
 ---
 
 ## 🔥 ขั้นตอนที่ 2: ติดตั้ง Container Runtime — containerd (ทุกเครื่อง)
-Kubernetes v1.34 ใช้ containerd เป็น runtime หลัก
+Kubernetes v1.33 ใช้ containerd เป็น runtime หลัก
 
 ### 2.1 ติดตั้ง containerd
 ```bash
@@ -82,19 +82,19 @@ sudo systemctl restart containerd
 
 ---
 
-## 🔥 ขั้นตอนที่ 3: ติดตั้ง Kubernetes v1.34 (ทุกเครื่อง)
-Repo ใหม่ของ Kubernetes อยู่ที่ **pkgs.k8s.io** และรองรับ v1.34 เต็มรูปแบบ
+## 🔥 ขั้นตอนที่ 3: ติดตั้ง Kubernetes v1.33 (ทุกเครื่อง)
+Repo ใหม่ของ Kubernetes อยู่ที่ **pkgs.k8s.io** และรองรับ v1.33 เต็มรูปแบบ
 
 ### 3.1 เพิ่ม Repo
 ```bash
 sudo apt-get update
 sudo apt-get install -y apt-transport-https ca-certificates curl gpg
 
-curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.34/deb/Release.key | \
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.33/deb/Release.key | \
   sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
 echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] \
-https://pkgs.k8s.io/core:/stable:/v1.34/deb/ /" | \
+https://pkgs.k8s.io/core:/stable:/v1.33/deb/ /" | \
   sudo tee /etc/apt/sources.list.d/kubernetes.list > /dev/null
 ```
 
@@ -122,10 +122,10 @@ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 ```
 
-### 4.3 ติดตั้ง Calico CNI (รองรับ Kubernetes 1.34)
+### 4.3 ติดตั้ง Calico CNI (รองรับ Kubernetes 1.33)
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.28.0/manifests/tigera-operator.yaml
-kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.28.0/manifests/custom-resources.yaml
+kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.31.0/manifests/tigera-operator.yaml
+kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.31.0/manifests/custom-resources.yaml
 ```
 
 รอให้ node จาก NotReady → Ready
@@ -147,7 +147,7 @@ kubectl get nodes
 
 ---
 
-## 🎉 Cluster Kubernetes 1.34 พร้อมใช้งาน!
+## 🎉 Cluster Kubernetes 1.33 พร้อมใช้งาน!
 หากต้องการให้เพิ่ม section เช่น
 - การติดตั้ง Dashboard
 - การใช้ NGINX Ingress Controller
