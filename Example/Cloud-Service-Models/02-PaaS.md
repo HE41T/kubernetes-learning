@@ -1,4 +1,4 @@
-# 🧩 Platform as a Service (PaaS)
+# ☁️ Platform as a Service (PaaS)
 
 > โมดูลนี้คือ **Platform-as-a-Service (PaaS)**
 > โมเดล Cloud ที่ช่วยให้คุณโฟกัสกับการพัฒนาแอป โดยไม่ต้องปวดหัวกับระบบพื้นฐาน
