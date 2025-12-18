@@ -107,7 +107,7 @@ sudo apt-mark hold kubelet kubeadm kubectl
 
 ### 3.3 เช็ค Status kubelet
 ```
-systemctl status kubelet
+sudo systemctl status kubelet
 
 #ถ้าไม่รัน
 sudo systemctl start kubelet
