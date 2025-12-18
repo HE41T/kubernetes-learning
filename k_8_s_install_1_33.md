@@ -9,6 +9,7 @@
 4. ตั้งค่า Master Node
 5. เชื่อม Worker Nodes
 6. ติดตั้ง CNI (Calico)
+7. ตั้งค่า DNS แบบถาวร
 
 ---
 
@@ -154,12 +155,22 @@ kubectl get nodes
 
 ---
 
+## 🔥 ขั้นตอนที่ 6 ตั้งค่า DNS แบบถาวร
+แก้ไขไฟล์ /etc/systemd/resolved.conf
+```
+sudo vi /etc/systemd/resolved.conf
+```
+จากนั้นให้หาคำและแก้ไขให้เป็นดังนี้
+```
+[Resolve]
+DNS=8.8.8.8 8.8.4.4
+FallbackDNS=1.1.1.1
+DNSStubListener=yes
+```
+รีสตาร์ท service
+```
+sudo systemctl restart systemd-resolved
+```
+
+---
 ## 🎉 Cluster Kubernetes 1.33 พร้อมใช้งาน!
-หากต้องการให้เพิ่ม section เช่น
-- การติดตั้ง Dashboard
-- การใช้ NGINX Ingress Controller
-- การสร้าง StorageClass + PV
-- การใช้งาน MetalLB (LoadBalancer)
-
-บอกได้เลย จะเพิ่มให้ในรูปแบบ Markdown สวยงามเหมือนเดิม!
-
