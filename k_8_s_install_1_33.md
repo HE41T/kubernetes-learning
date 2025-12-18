@@ -162,7 +162,6 @@ sudo vi /etc/systemd/resolved.conf
 ```
 จากนั้นให้หาคำและแก้ไขให้เป็นดังนี้
 ```
-[Resolve]
 DNS=8.8.8.8 8.8.4.4
 FallbackDNS=1.1.1.1
 DNSStubListener=yes
