@@ -170,6 +170,9 @@ DNSStubListener=yes
 ```
 sudo systemctl restart systemd-resolved
 ```
-
+จากนั้นทดสอบ ping
+```
+ping www.google.com
+```
 ---
 ## 🎉 Cluster Kubernetes 1.33 พร้อมใช้งาน!
