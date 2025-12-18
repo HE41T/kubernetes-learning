@@ -111,7 +111,6 @@ systemctl status kubelet
 
 #ถ้าไม่รัน
 sudo systemctl start kubelet
-sudo systemctl enable kubelet
 ```
 
 ---
