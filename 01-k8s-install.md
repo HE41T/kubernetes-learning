@@ -2,6 +2,8 @@
 
 คู่มือนี้เป็นเวอร์ชันอัปเดตล่าสุดสำหรับ **Kubernetes v1.33.x** บน Ubuntu **20.04 / 22.04 LTS** โดยใช้ **kubeadm** และ **containerd** (Runtime มาตรฐานปัจจุบัน)
 
+<img width="877" height="682" alt="image" src="https://github.com/user-attachments/assets/75584520-4afc-400c-a21b-75db876843c4" />
+
 ขั้นตอนทั้งหมดประกอบด้วย:
 1. การเตรียมเครื่อง (Pre-requisites)
 2. ติดตั้ง Container Runtime (containerd)
