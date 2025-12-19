@@ -39,6 +39,116 @@ Cluster คือกลุ่มของเครื่อง (Node) ที่�
 
 ---
 
+## 2.1 การคำนวณสเปก Master Node และ Worker Node
+
+หัวข้อนี้อธิบายแนวคิด **การประเมินสเปก (CPU / RAM / Disk)** ของ Master และ Worker เพื่อใช้งานจริง
+
+### บทบาทที่แตกต่างกัน
+
+| Node        | หน้าที่หลัก                           |
+| ----------- | ------------------------------------- |
+| Master Node | ควบคุม Cluster, Scheduling, API, etcd |
+| Worker Node | รัน Pod / Container / Application     |
+
+---
+
+### สเปก Master Node (Control Plane)
+
+Master **ไม่เน้นรัน Application** แต่เน้นความเสถียรและการตอบสนองของระบบควบคุม
+
+#### Resource ที่ Master ใช้
+
+* kube-apiserver
+* kube-scheduler
+* kube-controller-manager
+* etcd
+
+#### สเปกแนะนำ
+
+| ขนาดระบบ           | CPU     | RAM      | Disk       |
+| ------------------ | ------- | -------- | ---------- |
+| Lab / Mini-Project | 2 vCPU  | 4 GB     | 40–50 GB   |
+| Small Production   | 4 vCPU  | 8 GB     | 100 GB SSD |
+| Medium / Large     | 8+ vCPU | 16–32 GB | 200 GB SSD |
+
+📌 **เหตุผล**
+
+* etcd ใช้ RAM และ Disk I/O สูง
+* API Server ต้องตอบสนองเร็ว
+
+---
+
+### สเปก Worker Node
+
+Worker คือจุดที่ **Application รันจริง** → ต้องคำนวณจากจำนวน Pod
+
+#### แนวคิดการคำนวณ
+
+```text
+Worker Resource ≥ (Resource ของ Pod × จำนวน Pod) + Buffer
+```
+
+#### ตัวอย่างการคำนวณ
+
+สมมติ:
+
+* 1 Pod ใช้ CPU = 0.5 Core
+* 1 Pod ใช้ RAM = 512 MB
+* ต้องการรัน 20 Pods
+
+```text
+CPU = 0.5 × 20 = 10 Cores
+RAM = 512MB × 20 = 10 GB
+```
+
+➡️ Worker ควรมีอย่างน้อย:
+
+* CPU ≥ 12 Cores (เผื่อระบบ)
+* RAM ≥ 12–16 GB
+
+---
+
+### สเปก Worker แนะนำ (โดยประมาณ)
+
+| ขนาดระบบ     | CPU       | RAM      | Disk      |
+| ------------ | --------- | -------- | --------- |
+| Lab          | 2–4 vCPU  | 4–8 GB   | 40 GB     |
+| Mini-Project | 4–8 vCPU  | 8–16 GB  | 80–100 GB |
+| Production   | 8–32 vCPU | 16–64 GB | 200 GB+   |
+
+📌 Disk ของ Worker ใช้สำหรับ:
+
+* Image Container
+* Log
+* EmptyDir Volume
+
+---
+
+### สรุปแนวคิดการออกแบบ
+
+* **Master** → เน้นเสถียร ไม่เน้นแรงมาก
+* **Worker** → คำนวณจาก Pod ที่จะรันจริง
+* ควรเผื่อ Resource อย่างน้อย 20–30%
+* Production ควรแยก Master กับ Worker เสมอ
+
+---
+
+> แนวคิดนี้ใช้ได้ทั้ง On-Premise, VM และ Cloud
+
+## 3. Namespace
+
+### ความหมาย
+
+* มี 1 Master Node
+* มี 1 หรือหลาย Worker Node
+
+### การใช้งาน
+
+* เหมาะสำหรับ Lab / Learning / Mini-Project
+* ไม่เหมาะกับ Production เพราะไม่มี HA
+
+---
+
 ## 3. Namespace
 
 ### ความหมาย
