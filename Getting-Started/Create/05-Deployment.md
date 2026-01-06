@@ -6,6 +6,10 @@
 * รองรับ rolling updates และ rollback
 * ใช้สำหรับ stateless application เป็นหลัก
 
+ยังหาที่ใส่ไม่ได้ ฝากไว้ก่อน
+
+<img width="683" height="323" alt="image" src="https://github.com/user-attachments/assets/ca4ef50d-e785-4519-bbcb-57120a67d71b" />
+
 ---
 
 ## 1. สร้าง Deployment พื้นฐาน
