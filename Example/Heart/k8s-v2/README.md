@@ -34,10 +34,12 @@ notepad C:\Windows\System32\drivers\etc\hosts
 kubectl get nodes -o wide
 ```
 ## วิธีดู Port ของ Ingress
+<img width="1160" height="115" alt="image" src="https://github.com/user-attachments/assets/9ab461b3-de6f-489d-bd32-d8a066d7f747" />
+
 ```
 kubectl get svc -n ingress-nginx
 ```
 ### Use Case
 ```
-todo.com:31102
+todo.com:31211
 ```
