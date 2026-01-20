@@ -10,7 +10,7 @@
 ### ก่อนเริ่มใช้งาน
 ติดตั้ง NGINX Ingress Controller
 ```
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.0.0/deploy/static/provider/cloud/deploy.yaml
 ```
 ตรวจสอบ
 ```
