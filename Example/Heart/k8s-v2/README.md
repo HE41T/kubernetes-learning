@@ -29,3 +29,15 @@ notepad C:\Windows\System32\drivers\etc\hosts
 ```
 192.168.*.***  todo.com
 ```
+## วิธีดู IP ของ Worker Node
+```
+kubectl get nodes -o wide
+```
+## วิธีดู Port ของ Ingress
+```
+kubectl get svc -n ingress-nginx
+```
+### Use Case
+```
+todo.com:31102
+```
