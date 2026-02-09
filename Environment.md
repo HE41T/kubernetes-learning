@@ -117,8 +117,250 @@ spec:
 * NFS `/data/sit`
 * NFS `/data/uat`
 
+นี่คือตัวอย่าง **Ingress YAML** ที่ออกแบบมาให้สอดคล้องกับแนวทาง "แยก Environment" (Dev, SIT, UAT) ที่เราคุยกันครับ
+
+การทำ Ingress มี 2 ท่าหลักๆ คือ **Host-based** (แยก Subdomain) และ **Path-based** (แยก URL Path) แต่สำหรับ Production Grade แนะนำ **Host-based** ครับ
+
+---
+
+### แบบที่ 1: Host-based Routing (แนะนำที่สุด ✅)
+
+วิธีนี้ดีที่สุดสำหรับการแยก Environment เพราะ Config ไม่ตีกัน และจัดการ Certificate ง่าย (เช่น `dev.myapp.com`, `sit.myapp.com`)
+
+**หลักการ:** เราจะสร้างไฟล์ Ingress **แยกไว้ในแต่ละ Namespace** ของใครของมัน
+
+#### 1. Ingress สำหรับ DEV (`ingress-dev.yaml`)
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+  namespace: dev # อยู่ใน Namespace dev
+  annotations:
+    # กำหนดขนาดไฟล์ upload สูงสุด (เผื่อ dev เทส upload รูป)
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: dev.myapp.com # โดเมนของ Dev
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: myapp-service # ชี้ไปที่ Service ใน Namespace dev
+            port:
+              number: 80
+
+```
+
+#### 2. Ingress สำหรับ SIT (`ingress-sit.yaml`)
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+  namespace: sit # อยู่ใน Namespace sit
+  annotations:
+    # อาจจะเพิ่ม security header หรือ auth สำหรับ SIT
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: sit.myapp.com # โดเมนของ SIT
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: myapp-service # ชี้ไปที่ Service ใน Namespace sit
+            port:
+              number: 80
+
+```
+
+---
+
+### แบบที่ 2: Path-based Routing (ทางเลือก)
+
+ใช้วิธีนี้เมื่อคุณมี Domain เดียว (เช่น `myapp.com`) แต่อยากแยก Env ด้วย `/dev`, `/sit`
+*(ข้อควรระวัง: แอปพลิเคชันต้องเขียน code ให้รองรับ Base URL ด้วย ไม่งั้นรูปภาพหรือ JS จะ 404)*
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: multi-env-ingress
+  namespace: default # มักจะวางไว้ที่ namespace กลาง หรือต้องทำ Ingress แยกแต่ละ NS ก็ได้
+  annotations:
+    # สั่งให้ตัด /dev หรือ /sit ออกก่อนส่ง request ไปหา pod
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: myapp.com
+    http:
+      paths:
+      # เข้า myapp.com/dev -> ไปหา Service ของ Dev
+      - path: /dev(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: myapp-service-dev # Service ต้อง expose ออกมาให้เห็น (หรือใช้ ExternalName)
+            port:
+              number: 80
+      # เข้า myapp.com/sit -> ไปหา Service ของ SIT
+      - path: /sit(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: myapp-service-sit
+            port:
+              number: 80
+
+```
+
+---
+
+### แบบที่ 3: Production Grade with HTTPS (TLS) 🔒
+
+ตัวอย่างสำหรับ **UAT** หรือ **Production** ที่ต้องมี SSL Certificate
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress-secure
+  namespace: uat
+  annotations:
+    # บังคับใช้ HTTPS
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # (Optional) ถ้าใช้ Cert-Manager ให้ auto-generate ssl
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - uat.myapp.com
+    secretName: uat-tls-secret # ชื่อ Secret ที่เก็บ Cert (crt, key)
+  rules:
+  - host: uat.myapp.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: myapp-service
+            port:
+              number: 80
+
+```
+
+### คำอธิบายองค์ประกอบสำคัญ
+
+1. **`ingressClassName: nginx`**: บอก K8s ว่าให้ใช้ Nginx Controller เป็นตัวจัดการ (สำคัญมากสำหรับ K8s เวอร์ชันใหม่ๆ)
+2. **`metadata.namespace`**: ตัว Ingress ต้องอยู่ใน Namespace เดียวกับ Service ที่มันชี้ไปหา (สำหรับแบบ Host-based)
+3. **`backend.service.name`**: ชื่อของ Service (ClusterIP) ที่เราสร้างไว้คู่กับ Deployment
+4. **`backend.service.port.number`**: Port ที่ Service เปิดรับ (ปกติคือ 80) **ไม่ใช่** Port ของ Container (เช่น 8080)
+
+นี่คือตัวอย่าง **Service YAML** ที่ต้องใช้คู่กับ **Ingress** และ **Deployment** ที่เราทำไปก่อนหน้านี้ครับ
+
+**Concept:** Service ทำหน้าที่เป็น "ตัวกลาง" (Internal Load Balancer) ที่จะรวม Pod หลายๆ ตัว (ที่มี Label เดียวกัน) ให้เป็นจุดเข้าถึงเดียว เพื่อให้ Ingress ส่ง Traffic เข้ามาได้ครับ
+
+โดยปกติในการทำ Ingress เราจะใช้ Service Type เป็น **`ClusterIP`** (ค่า Default) เพราะเราต้องการให้เข้าถึงได้จากภายใน Cluster เท่านั้น (ผ่าน Ingress) ไม่ได้อยากเปิด Public IP ให้ Service ตรงๆ
+
+---
+
+### 1. Service สำหรับ DEV (`service-dev.yaml`)
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp-service  # ชื่อนี้ต้องตรงกับที่ระบุใน Ingress backend
+  namespace: dev       # ต้องอยู่ Namespace เดียวกับ Deployment และ Ingress
+spec:
+  type: ClusterIP      # ใช้ภายใน Cluster (Ingress จะส่ง traffic มาที่นี่)
+  selector:
+    app: web-app       # *** สำคัญมาก: ต้องตรงกับ label ใน Deployment ***
+  ports:
+    - name: http
+      port: 80         # Port ที่ Service เปิดรอรับ (ตรงกับที่ระบุใน Ingress)
+      targetPort: 8080 # Port ที่ Container เปิดใช้งานจริง (App ของคุณรัน port นี้)
+      protocol: TCP
+
+```
+
+### 2. Service สำหรับ SIT (`service-sit.yaml`)
+
+หน้าตาเหมือนกัน เปลี่ยนแค่ Namespace และ Selector (ถ้า SIT ใช้ label ต่างกัน แต่ในตัวอย่างเราใช้ `app: web-app` เหมือนกัน)
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp-service
+  namespace: sit
+spec:
+  type: ClusterIP
+  selector:
+    app: web-app       # ต้องตรงกับ labels ของ Pod ใน SIT
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+      protocol: TCP
+
+```
+
+---
+
+### ⚠️ จุดเชื่อมต่อที่ "ห้ามพลาด" (The Connection Points)
+
+เพื่อให้ Ingress -> Service -> Pod คุยกันรู้เรื่อง คุณต้องเช็ค 3 จุดนี้ให้ตรงกันเป๊ะๆ ครับ:
+
+1. **Ingress หา Service เจอไหม?**
+* ใน `Ingress`: `backend.service.name: myapp-service`
+* ต้องตรงกับ `Service`: `metadata.name: myapp-service`
+
+
+2. **Service หา Pod เจอไหม?**
+* ใน `Service`: `selector.app: web-app`
+* ต้องตรงกับ `Deployment`: `template.metadata.labels.app: web-app`
+
+
+3. **Port ทะลุถึงกันไหม?**
+* ใน `Ingress`: `port.number: 80`
+* ต้องตรงกับ `Service`: `ports.port: 80`
+* และ `Service`: `targetPort: 8080`
+* ต้องตรงกับ `Container`: `containerPort: 8080` (ใน Deployment)
+
+
+
+### แผนภาพการไหลของ Traffic
+
+```text
+User (Browser)
+      │
+      ▼
+[ Ingress Controller ] (แยก Host: dev.myapp.com)
+      │
+      ▼
+[ Service: myapp-service ] (Port 80)
+      │
+      │ (Load Balance)
+      ▼
+[ Pod: web-app ] (Port 8080)
+
+```
 
 * **ห้ามใช้ PV ก้อนเดียวกัน** เว้นแต่จะเป็นข้อมูล Read-only ที่ใช้ร่วมกันจริงๆ (เช่น Master Data ไฟล์ Zip รหัสไปรษณีย์ทั่วโลก ที่ไม่อัปเดตบ่อย)
+---
 
 ## 5. ความพร้อมก่อนลง Production (Production Readiness)
 
